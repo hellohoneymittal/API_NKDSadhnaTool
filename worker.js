@@ -35,37 +35,6 @@ function createOAuthState() {
   return crypto.randomUUID();
 }
 
-async function getGoogleAccessTokenAppscript(env) {
-  const clientId = await READ_SECRET(env, "API_CLIENT_ID");
-  const clientSecret = await READ_SECRET(env, "API_CLIENT_SECRET");
-  const refreshToken = await READ_SECRET(env, "API_REFRESH_TOKEN");
-
-  const body = new URLSearchParams({
-    client_id: clientId,
-    client_secret: clientSecret,
-    refresh_token: refreshToken,
-    grant_type: "refresh_token",
-  });
-
-  const response = await fetch("https://oauth2.googleapis.com/token", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
-    body,
-  });
-
-  const data = await response.json();
-
-  if (!response.ok || !data.access_token) {
-    throw new Error(
-      `Google access token refresh failed: ${JSON.stringify(data)}`,
-    );
-  }
-
-  return data.access_token;
-}
-
 async function inputSaleMasterData(env, saleData) {
   try {
     if (typeof saleData === "string") {
