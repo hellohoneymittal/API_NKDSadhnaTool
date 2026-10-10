@@ -4,6 +4,9 @@ export const GOOGLE_REDIRECT_URI =
 export const GOOGLE_SCOPES =
   "https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/script.send_mail";
 
+export const GOOGLE_SCRIPT_ID =
+  "1Qbs3XsZvEFDW9vol10og9V4BqPjhu7w6AuhVuGO5BADFFfEUdt32RVaa";
+
 // Google Sheet Configuration
 export const SPREADSHEET_ID = "12RLRK6PjQVeysGskGu6Zanpx6AFU7QwMbU__Ec8JjWI";
 export const USER_MASTER_SPREADSHEET_ID =
@@ -223,4 +226,52 @@ export async function TEST_KEY(env) {
       endsWithQuote: key.endsWith('"'),
     },
   };
+}
+
+export async function runAppsScriptFunction(
+  env,
+  functionName,
+  parameters = [],
+) {
+  const accessToken = await getGoogleAccessTokenAppscript(env);
+
+  const response = await fetch(
+    `https://script.googleapis.com/v1/scripts/${GOOGLE_SCRIPT_ID}:run`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        function: functionName,
+        parameters: [parameters],
+      }),
+    },
+  );
+
+  const responseText = await response.text();
+  let data;
+  try {
+    data = JSON.parse(responseText);
+  } catch {
+    throw new Error(
+      `Apps Script API returned invalid JSON (HTTP ${response.status}): ${responseText.slice(0, 1000)}`,
+    );
+  }
+
+  if (!response.ok || data.error) {
+    const apiError = data.error || data;
+    const executionError = apiError.details?.find(
+      (detail) => detail.errorMessage || detail.scriptStackTraceElements,
+    );
+    const details = executionError
+      ? `; execution=${JSON.stringify(executionError)}`
+      : "";
+    throw new Error(
+      `Apps Script API failed (HTTP ${response.status}): ${JSON.stringify(apiError)}${details}`,
+    );
+  }
+
+  return data;
 }

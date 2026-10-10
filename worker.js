@@ -3,6 +3,7 @@ import {
   GOOGLE_REDIRECT_URI,
   GOOGLE_SCOPES,
   READ_SECRET,
+  runAppsScriptFunction,
   TEST_KEY,
 } from "./utils/googleConfig.js";
 import {
@@ -12,9 +13,6 @@ import {
   DELETE_DATA,
   SEARCH_VOUCHER,
 } from "./api/ApplicationMethod.js";
-
-const GOOGLE_SCRIPT_ID =
-  "1JdxzMnE6B6gJCji6HF-NDjVqdteZOQoHHnNjNkVRg1BRfZ0f4m-_5zh3";
 
 async function getGoogleOAuthUrls(env, state) {
   const clientId = await READ_SECRET(env, "API_CLIENT_ID");
@@ -66,50 +64,6 @@ async function getGoogleAccessTokenAppscript(env) {
   }
 
   return data.access_token;
-}
-
-async function runAppsScriptFunction(env, functionName, parameters = []) {
-  const accessToken = await getGoogleAccessTokenAppscript(env);
-
-  const response = await fetch(
-    `https://script.googleapis.com/v1/scripts/${GOOGLE_SCRIPT_ID}:run`,
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        function: functionName,
-        parameters: [parameters],
-      }),
-    },
-  );
-
-  const responseText = await response.text();
-  let data;
-  try {
-    data = JSON.parse(responseText);
-  } catch {
-    throw new Error(
-      `Apps Script API returned invalid JSON (HTTP ${response.status}): ${responseText.slice(0, 1000)}`,
-    );
-  }
-
-  if (!response.ok || data.error) {
-    const apiError = data.error || data;
-    const executionError = apiError.details?.find(
-      (detail) => detail.errorMessage || detail.scriptStackTraceElements,
-    );
-    const details = executionError
-      ? `; execution=${JSON.stringify(executionError)}`
-      : "";
-    throw new Error(
-      `Apps Script API failed (HTTP ${response.status}): ${JSON.stringify(apiError)}${details}`,
-    );
-  }
-
-  return data;
 }
 
 async function inputSaleMasterData(env, saleData) {
