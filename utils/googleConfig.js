@@ -1,3 +1,9 @@
+export const GOOGLE_REDIRECT_URI =
+  "https://api-nkdsadhnatool.nityakrishnadas-pnc.workers.dev/oauth/callback";
+
+export const GOOGLE_SCOPES =
+  "https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/script.send_mail";
+
 // Google Sheet Configuration
 export const SPREADSHEET_ID = "12RLRK6PjQVeysGskGu6Zanpx6AFU7QwMbU__Ec8JjWI";
 export const USER_MASTER_SPREADSHEET_ID =
@@ -9,7 +15,7 @@ export const CREDIT_ACTIVITY_SPREADSHEET_ID =
 export const CREDIT_ACTIVITY_MASTER_SHEET_ID =
   "1gQ7VYdkUFbur38wCXqLcJBwSbOyVQu0apK7_QPg3M78";
 
-export async function readSecret(env, name) {
+export async function READ_SECRET(env, name) {
   const value = env[name];
 
   if (typeof value === "string") {
@@ -38,16 +44,16 @@ export async function readSecret(env, name) {
 // Google Authentication
 export async function getGoogleAccessToken(env) {
   const [clientEmail, privateKey] = await Promise.all([
-    readSecret(env, "NATURES_EMAIL"),
-    readSecret(env, "NATURES_PRIVATE_KEY"),
+    READ_SECRET(env, "API_EMAIL"),
+    READ_SECRET(env, "API_PRIVATE_KEY"),
   ]);
 
   if (!clientEmail) {
-    throw new Error("NATURES_EMAIL is missing");
+    throw new Error("API_EMAIL is missing");
   }
 
   if (!privateKey) {
-    throw new Error("NATURES_PRIVATE_KEY is missing");
+    throw new Error("API_PRIVATE_KEY is missing");
   }
 
   const formattedPrivateKey = privateKey
@@ -130,7 +136,7 @@ async function importPrivateKey(pem) {
     .replace(/\s/g, "");
 
   if (!pemContents) {
-    throw new Error("NATURES_PRIVATE_KEY is empty after formatting");
+    throw new Error("API_PRIVATE_KEY is empty after formatting");
   }
 
   let binaryDerString;
@@ -138,9 +144,7 @@ async function importPrivateKey(pem) {
   try {
     binaryDerString = atob(pemContents);
   } catch (error) {
-    throw new Error(
-      "NATURES_PRIVATE_KEY is not a valid Base64 PKCS8 private key",
-    );
+    throw new Error("API_PRIVATE_KEY is not a valid Base64 PKCS8 private key");
   }
 
   const binaryDer = new Uint8Array(binaryDerString.length);
@@ -186,21 +190,21 @@ function base64UrlEncodeBytes(bytes) {
 // Test Google Private Key
 
 export async function TEST_KEY(env) {
-  const binding = env.NATURES_PRIVATE_KEY;
+  const binding = env.API_PRIVATE_KEY;
 
   if (!binding) {
     return {
       status: false,
-      message: "NATURES_PRIVATE_KEY is missing",
+      message: "API_PRIVATE_KEY is missing",
     };
   }
 
-  const privateKey = await readSecret(env, "NATURES_PRIVATE_KEY");
+  const privateKey = await READ_SECRET(env, "API_PRIVATE_KEY");
 
   if (!privateKey) {
     return {
       status: false,
-      message: "NATURES_PRIVATE_KEY is missing",
+      message: "API_PRIVATE_KEY is missing",
     };
   }
 

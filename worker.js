@@ -1,5 +1,10 @@
 import { DurableObject } from "cloudflare:workers";
-import { readSecret, TEST_KEY } from "./utils/googleConfig.js";
+import {
+  GOOGLE_REDIRECT_URI,
+  GOOGLE_SCOPES,
+  READ_SECRET,
+  TEST_KEY,
+} from "./utils/googleConfig.js";
 import {
   GET_ALL_USER_LIST_NEW,
   GET_DATA,
@@ -11,15 +16,9 @@ import {
 const GOOGLE_SCRIPT_ID =
   "1JdxzMnE6B6gJCji6HF-NDjVqdteZOQoHHnNjNkVRg1BRfZ0f4m-_5zh3";
 
-const GOOGLE_REDIRECT_URI =
-  "https://natures-api.nkd-community-gzb.workers.dev/oauth/callback";
-
-const GOOGLE_SCOPES =
-  "https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/script.send_mail";
-
 async function getGoogleOAuthUrls(env, state) {
-  const clientId = await readSecret(env, "NATURES_CLIENT_ID");
-  const clientSecret = await readSecret(env, "NATURES_CLIENT_SECRET");
+  const clientId = await READ_SECRET(env, "API_CLIENT_ID");
+  const clientSecret = await READ_SECRET(env, "API_CLIENT_SECRET");
 
   const params = new URLSearchParams({
     client_id: clientId,
@@ -39,9 +38,9 @@ function createOAuthState() {
 }
 
 async function getGoogleAccessTokenAppscript(env) {
-  const clientId = await readSecret(env, "NATURES_CLIENT_ID");
-  const clientSecret = await readSecret(env, "NATURES_CLIENT_SECRET");
-  const refreshToken = await readSecret(env, "NATURES_REFRESH_TOKEN");
+  const clientId = await READ_SECRET(env, "API_CLIENT_ID");
+  const clientSecret = await READ_SECRET(env, "API_CLIENT_SECRET");
+  const refreshToken = await READ_SECRET(env, "API_REFRESH_TOKEN");
 
   const body = new URLSearchParams({
     client_id: clientId,
@@ -145,8 +144,8 @@ async function inputSaleMasterData(env, saleData) {
 }
 
 async function exchangeGoogleCode(code, env) {
-  const clientId = await readSecret(env, "NATURES_CLIENT_ID");
-  const clientSecret = await readSecret(env, "NATURES_CLIENT_SECRET");
+  const clientId = await READ_SECRET(env, "API_CLIENT_ID");
+  const clientSecret = await READ_SECRET(env, "API_CLIENT_SECRET");
 
   const body = new URLSearchParams({
     code,
